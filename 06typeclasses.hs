@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 module Shapes
 ( Point(..)
 , px
@@ -85,3 +87,78 @@ lockers = Map.fromList
   ,(101,(Free,"xy7r3"))
   ,(103,(Taken,"e3r21"))
   ]
+
+-- BST
+data Tree a = EmptyTree | Node a (Tree a) (Tree a) deriving (Show, Read, Eq)
+
+singleTree :: a -> Tree a
+singleTree x = Node x EmptyTree EmptyTree
+
+treeInsert :: (Ord a) => a -> Tree a -> Tree a
+treeInsert x EmptyTree = singleTree x
+treeInsert x (Node y left right)
+  | x == y = Node x left right -- if same element, return tree untouched
+  | x < y = Node y (treeInsert x left) right
+  | x > y = Node y left (treeInsert x right)
+
+treeElem :: (Ord a) => a -> Tree a -> Bool
+treeElem x EmptyTree = False
+treeElem x (Node y left right)
+  | x == y = True
+  | x > y = treeElem x right
+  | x < y = treeElem x left
+
+treeFromList :: (Ord a) =>[a] -> Tree a
+treeFromList xs = foldr treeInsert EmptyTree xs
+
+myTree = treeFromList [4,3,2,5,32,8,6,3,1,23,5,7,4,2]
+
+-- typeclasses again
+  -- class Eq a where
+  --   (==) :: a -> a -> Bool
+  --   (/=) :: a -> a -> Bool
+  --   x == y = not (x /= y)
+  --   x /= y = not (x == y)
+
+data TrafficLight = Red | Yellow | Green
+
+instance Eq TrafficLight where
+  Red == Red = True
+  Yellow == Yellow = True
+  Green == Green = True
+  _ == _ = False
+
+instance Show TrafficLight where
+  show Red = "Red Light"
+  show Yellow = "Yellow Light"
+  show Green = "Green Light"
+
+-- instance (Eq m) => Eq (Maybe m) where
+--   Just x == Just y = x == y
+--   Nothing == Nothing = True
+--   _ == _ = False
+
+class YesNo a where
+  yesNo :: a -> Bool
+
+instance YesNo [a] where
+  yesNo [] = False
+  yesNo _ = True
+
+instance YesNo Bool where
+  yesNo = id -- returns identity
+
+instance YesNo (Maybe a) where
+  yesNo (Just _) = True
+  yesNo Nothing = False
+
+instance YesNo (Tree a) where
+  yesNo EmptyTree = False
+  yesNo _ = True
+
+instance YesNo TrafficLight where
+  yesNo Red = False
+  yesNo _ = True
+
+yesNoIf :: (YesNo a) => a -> b -> b -> b
+yesNoIf test yesDo noDo= if yesNo test then yesDo else noDo
